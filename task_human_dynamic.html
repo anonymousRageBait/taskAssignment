@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Performance Target Study – Human Dynamic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #F7F8FA;
+            --surface: #FFFFFF;
+            --surface2: #F0F2F6;
+            --border: #E2E5EC;
+            --text: #1A1D23;
+            --text-soft: #6B7280;
+            --text-muted: #9CA3AF;
+            --accent: #2563EB;
+            --accent-soft: #EFF6FF;
+            --accent-border: #BFDBFE;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --radius: 10px;
+            --radius-sm: 6px;
+            --shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ── Layout ── */
+        .shell {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+
+        /* ── Progress bar ── */
+        .progress-wrap {
+            margin-bottom: 32px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .progress-track {
+            height: 4px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 99px;
+            transition: width 0.4s ease;
+        }
+
+        /* ── Typography ── */
+        .study-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            padding: 3px 10px;
+            border-radius: 99px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: var(--text-soft);
+            margin-bottom: 12px;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        .lead {
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        /* ── Scenario box ── */
+        .scenario-box {
+            background: var(--surface2);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 20px 24px;
+            margin: 24px 0;
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .scenario-box strong {
+            color: var(--text);
+        }
+
+        .scenario-box .condition-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            padding: 3px 10px;
+            border-radius: 99px;
+            margin-bottom: 14px;
+        }
+
+        /* ── Translation key table ── */
+        .key-section {
+            margin: 24px 0;
+        }
+
+        .key-section h3 {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .key-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .key-cell {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 8px;
+            text-align: center;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .key-cell.updated {
+            background: #FEF9C3;
+            border-color: #FDE047;
+            animation: flash 0.5s ease;
+        }
+
+        @keyframes flash {
+            0% {
+                background: #FEF08A;
+            }
+
+            100% {
+                background: #FEF9C3;
+            }
+        }
+
+        .key-symbol {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .key-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        /* ── Timer ── */
+        .timer-bar-wrap {
+            margin: 20px 0;
+        }
+
+        .timer-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .timer-clock {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--text);
+            min-width: 60px;
+        }
+
+        .timer-clock.warning {
+            color: var(--warning);
+        }
+
+        .timer-clock.danger {
+            color: var(--danger);
+        }
+
+        .timer-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .timer-track {
+            height: 6px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 99px;
+            transition: width 1s linear, background 0.5s;
+        }
+
+        .timer-fill.warning {
+            background: var(--warning);
+        }
+
+        .timer-fill.danger {
+            background: var(--danger);
+        }
+
+        /* ── Task grid ── */
+        .task-section {
+            margin-top: 28px;
+        }
+
+        .task-section h3 {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .task-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .task-symbol {
+            font-size: 22px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-input {
+            width: 100%;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 4px;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .task-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .task-input.correct {
+            border-color: var(--success);
+            background: #F0FDF4;
+        }
+
+        .task-input.wrong {
+            border-color: var(--danger);
+            background: #FEF2F2;
+        }
+
+        /* Mid-task change banner */
+        .key-change-banner {
+            display: none;
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #92400E;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .key-change-banner.visible {
+            display: flex;
+        }
+
+        /* ── Likert scale ── */
+        .likert-question {
+            margin-bottom: 32px;
+        }
+
+        .likert-question label {
+            display: block;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .likert-scale {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .likert-anchors {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .likert-options {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .likert-options label {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .likert-options input[type="radio"] {
+            display: none;
+        }
+
+        .likert-btn {
+            width: 100%;
+            padding: 10px 0;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-align: center;
+            transition: all 0.15s;
+            display: block;
+        }
+
+        .likert-options input[type="radio"]:checked+.likert-btn {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+
+        .likert-options label:hover .likert-btn {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* ── Demo inputs ── */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--surface);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 400;
+            transition: all 0.15s;
+            margin-bottom: 0;
+        }
+
+        .radio-group input[type="radio"] {
+            accent-color: var(--accent);
+        }
+
+        .radio-group label:has(input:checked) {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .check-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .check-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.15s;
+            margin-bottom: 0;
+        }
+
+        .check-group input[type="radio"] {
+            accent-color: var(--accent);
+        }
+
+        .check-group label:has(input:checked) {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: #1D4ED8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-soft);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        /* ── Consent ── */
+        .consent-choice {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .consent-btn {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .consent-btn.agree {
+            color: var(--success);
+        }
+
+        .consent-btn.agree:hover {
+            border-color: var(--success);
+            background: #F0FDF4;
+        }
+
+        .consent-btn.disagree {
+            color: var(--danger);
+        }
+
+        .consent-btn.disagree:hover {
+            border-color: var(--danger);
+            background: #FEF2F2;
+        }
+
+        /* ── Condition separator ── */
+        .condition-sep {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 0 0 32px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .condition-sep::before,
+        .condition-sep::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── Completion ── */
+        .completion-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #F0FDF4;
+            border: 2px solid #86EFAC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 24px;
+        }
+
+        .completion-card {
+            text-align: center;
+        }
+
+        /* ── Spinner ── */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Divider ── */
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 28px 0;
+        }
+
+        /* ── Error ── */
+        .field-error {
+            font-size: 12px;
+            color: var(--danger);
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
+        }
+
+        /* ── Toast ── */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--text);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.25s;
+            z-index: 999;
+            max-width: 320px;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 520px) {
+            .card {
+                padding: 24px 20px;
+            }
+
+            .key-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 5px;
+            }
+
+            .task-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 6px;
+            }
+
+            .likert-options {
+                gap: 4px;
+            }
+
+            .likert-btn {
+                font-size: 12px;
+                padding: 8px 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="shell" id="app">
+        <!-- Dynamically rendered -->
+    </div>
+
+    <div id="toast"></div>
+
+    <!-- Firebase -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAHSF8KZwFBLJlnuPbMLS_Cwu-HvoEdwA",
+            authDomain: "experiment-d7e5f.firebaseapp.com",
+            projectId: "experiment-d7e5f",
+            storageBucket: "experiment-d7e5f.firebasestorage.app",
+            messagingSenderId: "361468072360",
+            appId: "1:361468072360:web:666d55bc62df95bf48cd9d",
+            measurementId: "G-G9GWM3MJMX"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+
+        const db = getFirestore(app);
+
+        window.__db = db;
+        window.__addDoc = addDoc;
+        window.__collection = collection;
+        window.__serverTimestamp = serverTimestamp;
+        // Symbols used in translation key (both conditions share same symbols)
+        const SYMBOLS = ['▲', '●', '■', '◆', '★', 'ↈ ', 'Ͷ', '♥', 'Φ', '⁂'];
+
+        // Translation keys per condition
+        const ROUTINE_KEY = { '▲': 1, '●': 2, '■': 3, '◆': 4, '★': 5, 'ↈ ': 6, 'Ͷ': 7, '♥': 8, 'Φ': 9, '⁂': 10 };
+        const DYNAMIC_KEY_INITIAL = { '▲': 2, '●': 1, '■': 4, '◆': 3, '★': 6, 'ↈ ': 5, 'Ͷ': 8, '♥': 7, 'Φ': 10, '⁂': 9 };
+        const DYNAMIC_KEY_UPDATED = { '▲': 3, '●': 4, '■': 1, '◆': 2, '★': 9, 'ↈ ': 10, 'Ͷ': 5, '♥': 6, 'Φ': 7, '⁂': 8 };
+
+        // Task grid – 10 rows × 5 cols
+        const TASK_SYMBOLS = [
+            ['●', '★', 'Ͷ', '⁂', '▲'],
+            ['Φ', '■', 'ↈ ', '♥', '◆'],
+            ['★', '●', '◆', 'Φ', 'Ͷ'],
+            ['ↈ ', '▲', '⁂', '■', '★'],
+            ['♥', 'Φ', '●', 'Ͷ', '◆'],
+            ['■', '★', '♥', 'ↈ ', '⁂'],
+            ['★', '■', 'Φ', '▲', '●'],
+            ['⁂', '◆', '◆', '♥', '★'],
+            ['●', 'Ͷ', 'ↈ ', '★', 'Φ'],
+            ['◆', '◆', '▲', '■', '⁂'],
+        ];
+
+        // Single condition for this page
+        const CONDITION = { id: 'HM_D', setter: 'Human Manager', env: 'Dynamic', isDynamic: true };
+
+        const LIKERT_QUESTIONS = [
+            { key: 'trust', label: 'To what extent do you <strong>trust</strong> the performance targets set by the target setter?', lo: 'Not at all', hi: 'Completely' },
+            { key: 'accuracy', label: 'How <strong>accurate</strong> do you perceive the performance targets set by the target setter to be?', lo: 'Not accurate', hi: 'Very accurate' },
+            { key: 'reliability', label: 'How <strong>reliable</strong> do you consider the performance targets for evaluating your performance?', lo: 'Not reliable', hi: 'Very reliable' },
+            { key: 'efficiency', label: 'How <strong>efficient</strong> do you perceive the target-setting approach to be in helping you complete tasks?', lo: 'Not efficient', hi: 'Very efficient' },
+            { key: 'flexibility', label: 'How <strong>flexible</strong> do you perceive the target-setting approach to be?', lo: 'Not flexible', hi: 'Very flexible' },
+            { key: 'adaptability', label: 'How <strong>adaptable</strong> do you perceive the target-setting approach to be in changing work conditions?', lo: 'Not adaptable', hi: 'Very adaptable' },
+            { key: 'preference', label: 'To what extent do you <strong>prefer</strong> the target-setting approach?', lo: 'Very unlikely', hi: 'Very likely' },
+            { key: 'ai_familiarity', label: 'How <strong>familiar</strong> are you with AI-based target-setting systems?', lo: 'Not familiar at all', hi: 'Very familiar' },
+            { key: 'env_stability', label: 'My work environment was <strong>stable and predictable</strong>.', lo: 'Strongly disagree', hi: 'Strongly agree' },
+        ];
+
+        const TASK_DURATION = 180; // 3 minutes in seconds
+
+        // ── State ──────────────────────────────────────────────────────────────────
+        const state = {
+            screen: 'consent',
+            participantId: 'P_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            responses: {},
+            demographics: {},
+            timer: null,
+            timeLeft: TASK_DURATION,
+            keyChangeFired: false,
+            activeKey: null,
+        };
+
+        // ── Render engine ──────────────────────────────────────────────────────────
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            // Progress: consent(1) → condition(2) → task(3) → questionnaire(4) → demographics(5) → done(6)
+            const screenOrder = { consent: 1, condition: 2, task: 3, questionnaire: 4, demographics: 5, done: 6 };
+            const screenNum = screenOrder[state.screen] || 1;
+            const pct = Math.round((screenNum / 6) * 100);
+
+            if (state.screen !== 'done') {
+                app.innerHTML += `
+      <div class="progress-wrap">
+        <div class="progress-label"><span>PROGRESS</span><span>${pct}%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+            }
+
+            if (state.screen === 'consent') renderConsent(app);
+            else if (state.screen === 'condition') renderCondition(app);
+            else if (state.screen === 'task') renderTask(app);
+            else if (state.screen === 'questionnaire') renderQuestionnaire(app);
+            else if (state.screen === 'demographics') renderDemographics(app);
+            else if (state.screen === 'done') renderDone(app);
+        }
+
+        // ── Screen: Consent ────────────────────────────────────────────────────────
+        function renderConsent(app) {
+            app.innerHTML += `
+    <div class="card">
+      <div class="study-tag">Research Study</div>
+      <h1>Welcome & Thank You for Participating</h1>
+      <p class="lead">This study examines employees' perceptions of performance targets set by different target-setting approaches in varying work environments.</p>
+      <hr>
+      <p>You will be asked to read a short scenario, complete a symbol–number translation task, and answer several questionnaire items. The entire study will take approximately <strong>10–15 minutes</strong>.</p>
+      <p>Your participation is completely <strong>voluntary</strong>. All responses will be kept strictly confidential and used only for academic research purposes. No personally identifiable information will be collected or disclosed to any third party. You may withdraw at any time without penalty.</p>
+      <p>Please read instructions carefully and complete the task independently. There are no right or wrong opinions — we are interested in your honest perceptions.</p>
+      <div class="consent-choice">
+        <button class="consent-btn agree" onclick="giveConsent(true)">✓ &nbsp;I Agree to Participate</button>
+        <button class="consent-btn disagree" onclick="giveConsent(false)">✕ &nbsp;I Disagree</button>
+      </div>
+    </div>`;
+        }
+
+        window.giveConsent = function (agreed) {
+            if (!agreed) {
+                document.getElementById('app').innerHTML = `
+      <div class="card" style="text-align:center; padding: 60px 40px;">
+        <p style="font-size:18px; font-weight:600; color:var(--text);">Thank you for your time.</p>
+        <p style="margin-top:8px;">You have chosen not to participate. You may close this page.</p>
+      </div>`;
+                return;
+            }
+            state.screen = 'condition';
+            render();
+        };
+
+        // ── Screen: Condition (scenario) ───────────────────────────────────────────
+        function renderCondition(app) {
+            const cond = CONDITION;
+            const isDynamic = cond.isDynamic;
+
+            const envText = isDynamic
+                ? 'the environment is <strong>dynamic and subject to change</strong>. Task requirements and work procedures may change during the process, and you may need to adjust your approach. You are expected to respond quickly to updated instructions and adapt to evolving task conditions.'
+                : 'the work environment is <strong>stable and predictable</strong>. Tasks are standardized, repetitive, and follow clearly defined procedures that remain consistent over time. There are no unexpected changes in task requirements.';
+
+            const setterText = cond.setter === 'Human Manager'
+                ? 'Your performance targets are set by a <strong>human supervisor</strong>. The human supervisor assigns targets based on experience, observation, and understanding of employees\' capabilities and work conditions.'
+                : 'Your performance targets are set by an <strong>AI digital boss</strong>. The AI system assigns targets using data-driven algorithms based on predefined rules, analyzing performance data to ensure consistency and objectivity in target setting.';
+
+            const dynamicNote = isDynamic ? `
+    <p style="margin-top:12px; padding:12px; background:#FEF9C3; border-radius:6px; border:1px solid #FDE68A; font-size:13px; color:#92400E;">
+      ⚠️ <strong>Note:</strong> During the task, some translation rules will change at the midpoint. Please adjust to the updated key when prompted.
+    </p>` : '';
+
+            app.innerHTML += `
+    <div class="card">
+      <div class="study-tag">${cond.setter} · ${cond.env} Environment</div>
+      <h2>Read the Scenario</h2>
+      <p>Imagine yourself in the described situation and respond based on your own judgment and experience.</p>
+
+      <div class="scenario-box">
+        <div class="condition-badge">🏢 Your Role</div>
+        <p style="margin-bottom:10px;">You take on the role of an <strong>operations employee</strong> at a large organization. You have been working there for a considerable period and are recognized as a reliable and competent performer.</p>
+        <p style="margin-bottom:10px;">Your performance evaluation determines your eligibility for performance-based rewards, including bonuses and future career advancement. Your primary responsibility is to complete assigned tasks efficiently while maintaining high accuracy.</p>
+        <p style="margin-bottom:10px;">${setterText}</p>
+        <p>${envText}</p>
+        ${dynamicNote}
+      </div>
+
+      <p style="font-size:14px; color:var(--text-muted);">You are now required to complete a <strong>symbol–number translation task</strong>. A translation key is provided — convert each symbol into its corresponding number as quickly and accurately as possible within <strong>3 minutes</strong>.</p>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goToTask()">Start Task →</button>
+      </div>
+    </div>`;
+        }
+
+        window.goToTask = function () {
+            state.screen = 'task';
+            state.timeLeft = TASK_DURATION;
+            state.keyChangeFired = false;
+            state.activeKey = CONDITION.isDynamic ? { ...DYNAMIC_KEY_INITIAL } : { ...ROUTINE_KEY };
+            render();
+            startTimer();
+        };
+
+        // ── Screen: Task ───────────────────────────────────────────────────────────
+        function renderTask(app) {
+            const cond = CONDITION;
+
+            const keyEntries = Object.entries(state.activeKey);
+            const keyCells = keyEntries.map(([sym, num]) =>
+                `<div class="key-cell" id="kc_${sym.trim()}">
+       <span class="key-symbol">${sym}</span>
+       <span class="key-number">${num}</span>
+     </div>`
+            ).join('');
+
+            const rows = TASK_SYMBOLS.map((row, ri) =>
+                row.map((sym, ci) => {
+                    const id = `inp_${ri}_${ci}`;
+                    return `<div class="task-cell">
+        <span class="task-symbol">${sym}</span>
+        <input class="task-input" id="${id}" type="text" inputmode="numeric" maxlength="2"
+          data-row="${ri}" data-col="${ci}" data-sym="${sym.trim()}"
+          autocomplete="off" onchange="checkCell(this)" oninput="checkCell(this)"/>
+      </div>`;
+                }).join('')
+            ).join('');
+
+            const dynBanner = cond.isDynamic ? `
+    <div class="key-change-banner" id="keyChangeBanner">
+      🔄 <span>Translation key updated! Adjust and continue from row 6.</span>
+    </div>` : '';
+
+            app.innerHTML += `
+    <div class="card">
+      <div class="study-tag">${cond.setter} · ${cond.env}</div>
+      <h2>Symbol–Number Translation Task</h2>
+
+      <div class="timer-bar-wrap">
+        <div class="timer-display">
+          <span class="timer-clock" id="timerDisplay">3:00</span>
+          <span class="timer-label">remaining</span>
+        </div>
+        <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+      </div>
+
+      <div class="key-section">
+        <h3>Translation Key</h3>
+        ${dynBanner}
+        <div class="key-grid" id="keyGrid">${keyCells}</div>
+      </div>
+
+      <div class="task-section">
+        <h3>Enter Numbers Below</h3>
+        <div class="task-grid">${rows}</div>
+      </div>
+
+      <div class="btn-row" style="margin-top:24px;">
+        <button class="btn btn-primary" id="submitTaskBtn" onclick="submitTask()">Submit Answers</button>
+      </div>
+    </div>`;
+        }
+
+        function startTimer() {
+            clearInterval(state.timer);
+            state.timer = setInterval(() => {
+                state.timeLeft--;
+                updateTimerUI();
+                if (!state.keyChangeFired && CONDITION.isDynamic) {
+                    if (state.timeLeft <= TASK_DURATION / 2) {
+                        fireKeyChange();
+                    }
+                }
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timer);
+                    submitTask();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const el = document.getElementById('timerDisplay');
+            const bar = document.getElementById('timerFill');
+            if (!el) return;
+            const m = Math.floor(state.timeLeft / 60);
+            const s = state.timeLeft % 60;
+            el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+            const pct = (state.timeLeft / TASK_DURATION) * 100;
+            bar.style.width = pct + '%';
+            el.className = 'timer-clock';
+            bar.className = 'timer-fill';
+            if (state.timeLeft <= 30) { el.classList.add('danger'); bar.classList.add('danger'); }
+            else if (state.timeLeft <= 60) { el.classList.add('warning'); bar.classList.add('warning'); }
+        }
+
+        function fireKeyChange() {
+            state.keyChangeFired = true;
+            state.activeKey = { ...DYNAMIC_KEY_UPDATED };
+            const grid = document.getElementById('keyGrid');
+            if (!grid) return;
+            const banner = document.getElementById('keyChangeBanner');
+            if (banner) banner.classList.add('visible');
+            grid.querySelectorAll('.key-cell').forEach(cell => {
+                const sym = cell.querySelector('.key-symbol').textContent.trim();
+                const newNum = DYNAMIC_KEY_UPDATED[sym] ?? DYNAMIC_KEY_UPDATED[sym + ' '];
+                if (newNum !== undefined) {
+                    cell.querySelector('.key-number').textContent = newNum;
+                    cell.classList.add('updated');
+                }
+            });
+            showToast('⚡ Key updated! Adjust your answers for rows 6–10.');
+        }
+
+        window.checkCell = function (input) {
+            const sym = input.dataset.sym;
+            const val = parseInt(input.value);
+            const correct = state.activeKey[sym] ?? state.activeKey[sym + ' '];
+            input.className = 'task-input';
+            if (input.value === '') return;
+            if (!isNaN(val) && val === correct) input.classList.add('correct');
+            else input.classList.add('wrong');
+        };
+
+        window.submitTask = function () {
+            clearInterval(state.timer);
+            const answers = {};
+            let attempted = 0, correct = 0;
+            TASK_SYMBOLS.forEach((row, ri) => {
+                row.forEach((sym, ci) => {
+                    const inp = document.getElementById(`inp_${ri}_${ci}`);
+                    if (!inp) return;
+                    const val = parseInt(inp.value);
+                    const symKey = sym.trim();
+                    const expected = state.activeKey[symKey] ?? state.activeKey[symKey + ' '];
+                    if (!isNaN(val)) {
+                        attempted++;
+                        if (val === expected) correct++;
+                    }
+                    answers[`r${ri}_c${ci}`] = inp.value || '';
+                });
+            });
+            if (!state.responses[CONDITION.id]) state.responses[CONDITION.id] = {};
+            state.responses[CONDITION.id].task = { answers, attempted, correct, timeLeft: state.timeLeft, keyChangeFired: state.keyChangeFired };
+            state.screen = 'questionnaire';
+            render();
+        };
+
+        // ── Screen: Questionnaire ──────────────────────────────────────────────────
+        function renderQuestionnaire(app) {
+            const cond = CONDITION;
+
+            const questions = LIKERT_QUESTIONS.map(q => {
+                const label = q.label.replace(/the target setter/g, `<strong>${cond.setter}</strong>`);
+                const options = [1, 2, 3, 4, 5, 6, 7].map(v =>
+                    `<label>
+         <input type="radio" name="${q.key}" value="${v}"/>
+         <span class="likert-btn">${v}</span>
+       </label>`
+                ).join('');
+                return `
+      <div class="likert-question">
+        <label>${label}</label>
+        <div class="likert-scale">
+          <div class="likert-anchors"><span>${q.lo}</span><span>${q.hi}</span></div>
+          <div class="likert-options">${options}</div>
+        </div>
+      </div>`;
+            }).join('');
+
+            app.innerHTML += `
+    <div class="card">
+      <div class="study-tag">${cond.setter} · ${cond.env}</div>
+      <h2>Questionnaire</h2>
+      <p>Please rate the degree to which you agree with the following statements about the target-setting approach you just experienced.</p>
+      <hr>
+      ${questions}
+      <p id="likerterror" class="field-error" style="font-size:13px;">Please answer all questions before continuing.</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="submitQuestionnaire()">Final Questions →</button>
+      </div>
+    </div>`;
+        }
+
+        window.submitQuestionnaire = function () {
+            const cond = CONDITION;
+            const answers = {};
+            let allAnswered = true;
+            LIKERT_QUESTIONS.forEach(q => {
+                const sel = document.querySelector(`input[name="${q.key}"]:checked`);
+                if (!sel) { allAnswered = false; }
+                else answers[q.key] = parseInt(sel.value);
+            });
+            if (!allAnswered) {
+                document.getElementById('likerterror').classList.add('visible');
+                return;
+            }
+            if (!state.responses[cond.id]) state.responses[cond.id] = {};
+            state.responses[cond.id].likert = answers;
+            state.screen = 'demographics';
+            render();
+        };
+
+        // ── Screen: Demographics ───────────────────────────────────────────────────
+        function renderDemographics(app) {
+            app.innerHTML += `
+    <div class="card">
+      <div class="study-tag">Final Questions</div>
+      <h2>Demographics & Contextual Information</h2>
+      <p>These final questions help us understand the study context. All responses are anonymous.</p>
+      <hr>
+
+      <div class="form-group">
+        <label>1. Gender</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="Male"/> Male</label>
+          <label><input type="radio" name="gender" value="Female"/> Female</label>
+          <label><input type="radio" name="gender" value="Other"/> Other / Prefer not to say</label>
+        </div>
+        <p class="field-error" id="err_gender">Please select your gender.</p>
+      </div>
+
+      <div class="form-group">
+        <label>2. Age (years)</label>
+        <input type="number" id="d_age" min="16" max="99" placeholder="e.g. 28"/>
+        <p class="field-error" id="err_age">Please enter a valid age.</p>
+      </div>
+
+      <div class="form-group">
+        <label>3. Education level</label>
+        <div class="radio-group">
+          <label><input type="radio" name="education" value="Undergraduate"/> Undergraduate</label>
+          <label><input type="radio" name="education" value="Graduate"/> Graduate</label>
+          <label><input type="radio" name="education" value="Other"/> Other</label>
+        </div>
+        <p class="field-error" id="err_education">Please select your education level.</p>
+      </div>
+
+      <div class="form-group">
+        <label>4. Have you done any experimental or similar tasks before?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="prior_exp" value="Yes"/> Yes</label>
+          <label><input type="radio" name="prior_exp" value="No"/> No</label>
+        </div>
+        <p class="field-error" id="err_prior_exp">Please answer this question.</p>
+      </div>
+
+      <div class="form-group">
+        <label>5. How much did you enjoy the experimental task overall?</label>
+        <div style="margin-top:4px;">
+          <div class="likert-scale">
+            <div class="likert-anchors"><span>Don't enjoy it at all</span><span>Enjoy very much</span></div>
+            <div class="likert-options">
+              ${[1, 2, 3, 4, 5, 6, 7].map(v => `<label><input type="radio" name="enjoyment" value="${v}"/><span class="likert-btn">${v}</span></label>`).join('')}
+            </div>
+          </div>
+        </div>
+        <p class="field-error" id="err_enjoyment">Please rate your enjoyment.</p>
+      </div>
+
+      <p id="demographicserror" class="field-error" style="font-size:13px; margin-top:8px;">Please answer all required fields before submitting.</p>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="submitDemoBtn" onclick="submitDemographics()">
+          Submit Study
+        </button>
+      </div>
+    </div>`;
+        }
+
+        window.submitDemographics = function () {
+            let valid = true;
+            const clear = id => document.getElementById(id).classList.remove('visible');
+            const show = id => { document.getElementById(id).classList.add('visible'); valid = false; };
+
+            clear('err_gender'); clear('err_age'); clear('err_education'); clear('err_prior_exp'); clear('err_enjoyment');
+            document.getElementById('demographicserror').classList.remove('visible');
+
+            const gender = document.querySelector('input[name="gender"]:checked');
+            const age = document.getElementById('d_age').value;
+            const education = document.querySelector('input[name="education"]:checked');
+            const priorExp = document.querySelector('input[name="prior_exp"]:checked');
+            const enjoyment = document.querySelector('input[name="enjoyment"]:checked');
+
+            if (!gender) show('err_gender');
+            if (!age || parseInt(age) < 16 || parseInt(age) > 99) show('err_age');
+            if (!education) show('err_education');
+            if (!priorExp) show('err_prior_exp');
+            if (!enjoyment) show('err_enjoyment');
+
+            if (!valid) {
+                document.getElementById('demographicserror').classList.add('visible');
+                return;
+            }
+
+            state.demographics = {
+                gender: gender.value,
+                age: parseInt(age),
+                education: education.value,
+                prior_experience: priorExp.value,
+                enjoyment: parseInt(enjoyment.value),
+            };
+
+            saveToFirebase();
+        };
+
+        // ── Firebase save ──────────────────────────────────────────────────────────
+        async function saveToFirebase() {
+            const btn = document.getElementById('submitDemoBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner"></span> Saving…`;
+
+            const cond = CONDITION;
+            const r = state.responses[cond.id] || {};
+            const prefix = cond.id;
+
+            const record = {
+                participantId: state.participantId,
+                condition: cond.id,
+                conditionLabel: `${cond.setter} · ${cond.env}`,
+                timestamp: window.__serverTimestamp(),
+                ...state.demographics,
+            };
+
+            // task data
+            if (r.task) {
+                record[`${prefix}_attempted`] = r.task.attempted;
+                record[`${prefix}_correct`] = r.task.correct;
+                record[`${prefix}_timeLeft`] = r.task.timeLeft;
+                record[`${prefix}_keyChanged`] = r.task.keyChangeFired;
+                Object.entries(r.task.answers || {}).forEach(([k, v]) => {
+                    record[`${prefix}_ans_${k}`] = v;
+                });
+            }
+            // likert data
+            if (r.likert) {
+                Object.entries(r.likert).forEach(([k, v]) => {
+                    record[`${prefix}_${k}`] = v;
+                });
+            }
+
+            try {
+                await window.__addDoc(window.__collection(window.__db, 'participants'), record);
+                state.screen = 'done';
+                render();
+            } catch (err) {
+                console.error('Firebase error:', err);
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Study';
+                document.getElementById('demographicserror').textContent = 'Failed to save data. Please check your Firebase config and try again.';
+                document.getElementById('demographicserror').classList.add('visible');
+                showToast('❌ Save failed. Check Firebase config.');
+            }
+        }
+
+        // ── Screen: Done ───────────────────────────────────────────────────────────
+        function renderDone(app) {
+            app.innerHTML += `
+    <div class="card completion-card">
+      <div class="completion-icon">✓</div>
+      <h1>Thank you!</h1>
+      <p class="lead" style="margin-top:8px; text-align:center;">Your responses have been recorded successfully.</p>
+      <hr>
+      <p style="text-align:center;">We appreciate your time and participation in this research study.<br>Your responses are completely confidential and will only be used for academic purposes.</p>
+      <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-top:16px;">You may now close this page.</p>
+    </div>`;
+        }
+
+        // ── Toast ──────────────────────────────────────────────────────────────────
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3500);
+        }
+        window.showToast = showToast;
+
+        // ── Boot ───────────────────────────────────────────────────────────────────
+        render();
+
+
+    </script>
+</body>
+
+</html>
